@@ -2,6 +2,8 @@
 // @name           Tapuz Photo Preview
 // @description	   Show Tapuz Forums attachment images on mouse over
 // @namespace      http://kobi
+// @downloadURL    https://github.com/kobi/GreasemonkeyUserScripts/raw/master/Tapuz%20Forums/tapuz_photo_preview.user.js
+// @version        3.0
 // @include        http://www.tapuz.co.il/Forums2008/*
 // @include        http://www.tapuz.co.il/Communa/*
 // ==/UserScript==
@@ -234,7 +236,7 @@ $(function(){
 	var imgThumbnail = $('<img />')
 						.css('margin-right', options.thumbnailRightMargin)
 						.css('vertical-align', 'middle')
-						.attr('alt', '??')
+						.attr('alt', '📷')
 						//.attr('src', options.showThumbnail ? token.thumb : 'http://i.imgur.com/1uXBY.gif')
 						.attr('src', 'http://i.imgur.com/1uXBY.gif')
 						;
