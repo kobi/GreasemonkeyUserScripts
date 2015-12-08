@@ -3,16 +3,10 @@
 // @description	   Show Tapuz Forums attachment images on mouse over
 // @namespace      http://kobi
 // @downloadURL    https://github.com/kobi/GreasemonkeyUserScripts/raw/master/Tapuz%20Forums/tapuz_photo_preview.user.js
-// @version        4.0
+// @version        3.0
 // @include        http://www.tapuz.co.il/Forums2008/*
 // @include        http://www.tapuz.co.il/Communa/*
 // ==/UserScript==
-
-/*
-if(!unsafeWindow) // Google Chrome Support
-{
-    var unsafeWindow = window;
-}*/
 
 var $ = unsafeWindow.jQuery;
 var options = {
@@ -119,26 +113,41 @@ $(function(){
   // forums have these little tags with image attachments
   var imageTags = $('span.indicator.photoIcon');
 	var galleryTags = $('img[src$="icon_Photos_forumpage.png"]');
-
 	
   // new forums use href for image links, instead of olschool onClick.
   var imageTagsLinkParents = imageTags.parent();
-  options.isNewForum = (galleryTags.length > 0) || (imageTagsLinkParents.filter('[href]').length > 0 && imageTagsLinkParents.filter('[onClick]').length == 0);
+  options.isNewForum = $('#messages-tree').length > 0;
+  options.isOldForum = false;
   imageTags.each(function(){
 	try {
 		var newToken = new Token();
-
-		newToken.parentLink = $(this).parent();
-		newToken.imageUrl = newToken.parentLink.attr('href');
+		var imageTag = $(this);
+		//no more parents - ToDo: refactor code and remove parentLink.
+		newToken.parentLink = imageTag;
+		
+		newToken.parentTr = imageTag.closest('div.treeMsgContDiv');
+		newToken.parentPost = newToken.parentTr.closest('div.msg-title');
+		// id looks like msg_179718896
+		newToken.MessageId = newToken.parentPost.get(0).id.match(/\d+$/);
+		
+		//message is populated by ajax...
+		// send to /forums2008/services/forumsservice.asmx/GetAllMessageAttachments?messageId=179718896
+		//
+		
+		newToken.imageUrl = newToken.parentPost.find('.regularImages img').attr('src');
 
 		//newToken.thumb = newToken.getImageUrl(70, 22);
 		//newToken.previewUrl = newToken.getImageUrl(230, 1000);
 		// parent: div.msgContainer on old forums, div.msg-title on new forums
-		newToken.parentTr = newToken.parentLink.parents('div.msgContainer, div.msg-title').eq(0);
+		
 
 		tokens.push(newToken);
-	} catch(e) {}
+	} catch(e) {console.error(e);}
   }); //each img
+	
+	console.log('-------------------------------------------');
+	console.log(imageTags);
+	console.log(tokens);
 	
 	//new gallery tags -----------
 	galleryTags.each(function(){
@@ -176,7 +185,7 @@ $(function(){
   });// each commune attachment
 	
   //set options
-  if(options.isNewForum){
+	if(options.isNewForum){
 	options.popupImgPositionLeft = '420px';
 	options.thumbnailRightMargin = '3px';
 	imageTagsLinkParents.css('white-space','nowrap');
@@ -212,7 +221,7 @@ $(function(){
 	var imgThumbnail = $('<img />')
 						.css('margin-right', options.thumbnailRightMargin)
 						.css('vertical-align', 'middle')
-						.attr('alt', '??')
+						.attr('alt', '📷')
 						//.attr('src', options.showThumbnail ? token.thumb : 'http://i.imgur.com/1uXBY.gif')
 						.attr('src', 'http://i.imgur.com/1uXBY.gif')
 						;
