@@ -3,7 +3,7 @@
 // @description	   Show Tapuz Forums attachment images on mouse over
 // @namespace      http://kobi
 // @downloadURL    https://github.com/kobi/GreasemonkeyUserScripts/raw/master/Tapuz%20Forums/tapuz_photo_preview.user.js
-// @version        3.0
+// @version        4.0
 // @include        http://www.tapuz.co.il/Forums2008/*
 // @include        http://www.tapuz.co.il/Communa/*
 // ==/UserScript==
@@ -17,7 +17,7 @@ if(!unsafeWindow) // Google Chrome Support
 var $ = unsafeWindow.jQuery;
 var options = {
   // showThumbnail==true can lead to Tapuz's firewall blocking us for excess use.
-  showThumbnail: true,
+  showThumbnail: false,
   // other possible spinners: /*'/tapuzforum/images/Emo60.gif'  'http://upload.wikimedia.org/wikipedia/commons/f/f8/Ajax-loader%282%29.gif'*/
   loadingSpinner: 'http://i.imgur.com/aG64j.gif',
   extaTopMargin: 0, // more margin, for the fixed header forums have
@@ -32,21 +32,6 @@ function relocateImageAccordingToScroll(img, parentTr, extraTopMargin){
 	var documentScrollPosition = unsafeWindow.scrollY + $(unsafeWindow).height() - img.height() - 10;
 	img.css('top', 
 	  Math.min(trTopPosition, documentScrollPosition) + 'px')
-}
-
-function getPhotoUrlFromOnclickAttribute(onClick){
-	if(!onClick)
-		return;
-	// onclick:   goToMsgAtt('http://img2.timg.co.il/forums/1_158600793.jpg',158600793)
-	var imgUrl = onClick.match(/http:\/\/[^']*/);
-	if(imgUrl)
-		return imgUrl[0]; // the first group
-	// onClick:  goToMsgAtt(';1_158462131.jpg',158464688)   // I have seen one example of this one...
-	var imgFileName = onClick.match(/\(["'];([\d_]+\.\w{2,5})/);
-	if(imgFileName)
-		// here I hardcode the url, which I prefer not to do, but I don't have much choice here...
-		return 'http://img2.timg.co.il/forums/' + imgFileName[1];
-	// else? will cause an error anyway.
 }
 
 function Token(){
@@ -132,25 +117,19 @@ $(function(){
 
   // search for forum image links:
   // forums have these little tags with image attachments
-  var imageTags = $('img[src*=Attch]')
-					.filter(function (){
-						return $(this).attr('src').match(/\bt_(?:jpg|gif|bmp|png)\.gif$/i)
-					});
+  var imageTags = $('span.indicator.photoIcon');
 	var galleryTags = $('img[src$="icon_Photos_forumpage.png"]');
 
 	
   // new forums use href for image links, instead of olschool onClick.
   var imageTagsLinkParents = imageTags.parent();
   options.isNewForum = (galleryTags.length > 0) || (imageTagsLinkParents.filter('[href]').length > 0 && imageTagsLinkParents.filter('[onClick]').length == 0);
-  options.isOldForum = imageTagsLinkParents.filter('[href]').length == 0 && imageTagsLinkParents.filter('[onClick]').length > 0;
   imageTags.each(function(){
 	try {
 		var newToken = new Token();
 
 		newToken.parentLink = $(this).parent();
-		newToken.imageUrl = options.isNewForum ?
-								newToken.parentLink.attr('href') :
-								getPhotoUrlFromOnclickAttribute(newToken.parentLink.attr('onClick'));
+		newToken.imageUrl = newToken.parentLink.attr('href');
 
 		//newToken.thumb = newToken.getImageUrl(70, 22);
 		//newToken.previewUrl = newToken.getImageUrl(230, 1000);
@@ -197,10 +176,7 @@ $(function(){
   });// each commune attachment
 	
   //set options
-  if(options.isOldForum){
-	options.popupImgPositionLeft = '375px';
-	options.thumbnailRightMargin = '0';
-  } else if(options.isNewForum){
+  if(options.isNewForum){
 	options.popupImgPositionLeft = '420px';
 	options.thumbnailRightMargin = '3px';
 	imageTagsLinkParents.css('white-space','nowrap');
@@ -236,7 +212,7 @@ $(function(){
 	var imgThumbnail = $('<img />')
 						.css('margin-right', options.thumbnailRightMargin)
 						.css('vertical-align', 'middle')
-						.attr('alt', '📷')
+						.attr('alt', '??')
 						//.attr('src', options.showThumbnail ? token.thumb : 'http://i.imgur.com/1uXBY.gif')
 						.attr('src', 'http://i.imgur.com/1uXBY.gif')
 						;
