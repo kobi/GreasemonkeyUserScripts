@@ -71,6 +71,28 @@ function Token(){
 		return thisToken.imageUrl.replace(/(http:\/\/[^\/]+)/,"$1/resimg.aspx?corner=0&pencolor=ffffff&pw=" + width + "&ph=" + height + "&image=");
 	};
 	
+	thisToken.getImageUrlPromise = function(){
+		if(!thisToken.messageId){
+			var url = thisToken.getImageUrl();
+			var result = {
+				ImageUrl:url
+			};
+			return $.Deferred().resolve(result).promise();
+		}
+		
+		//message is populated by ajax...
+		// send to /forums2008/services/forumsservice.asmx/GetAllMessageAttachments?messageId=179718896
+		//
+		var attachmentsAjaxUrl = '/forums2008/services/forumsservice.asmx/GetAllMessageAttachments?messageId=' + thisToken.messageId
+		return $.getJSON(attachmentsAjaxUrl).done(function(data){
+			console.log('kobi', data);
+			return {
+				ImageUrl:data.Attachment,
+				Thumbnail:data.Thumbnail,
+				BigImageUrl:data.BigImageUrl};
+		});
+	}
+	
 	thisToken.hidePopup = function(){
 		thisToken.popupIsVisible = false;
 		hideSpinner();
@@ -128,11 +150,9 @@ $(function(){
 		newToken.parentTr = imageTag.closest('div.treeMsgContDiv');
 		newToken.parentPost = newToken.parentTr.closest('div.msg-title');
 		// id looks like msg_179718896
-		newToken.MessageId = newToken.parentPost.get(0).id.match(/\d+$/);
+		newToken.messageId = newToken.parentPost.get(0).id.match(/\d+$/);
 		
-		//message is populated by ajax...
-		// send to /forums2008/services/forumsservice.asmx/GetAllMessageAttachments?messageId=179718896
-		//
+		//here:
 		
 		newToken.imageUrl = newToken.parentPost.find('.regularImages img').attr('src');
 
@@ -146,8 +166,9 @@ $(function(){
   }); //each img
 	
 	console.log('-------------------------------------------');
-	console.log(imageTags);
-	console.log(tokens);
+	console.log('kobi', imageTags);
+	console.log('kobi', tokens);
+	console.log('kobi', tokens[3].getImageUrlPromise());
 	
 	//new gallery tags -----------
 	galleryTags.each(function(){
@@ -221,7 +242,7 @@ $(function(){
 	var imgThumbnail = $('<img />')
 						.css('margin-right', options.thumbnailRightMargin)
 						.css('vertical-align', 'middle')
-						.attr('alt', '📷')
+						.attr('alt', '??')
 						//.attr('src', options.showThumbnail ? token.thumb : 'http://i.imgur.com/1uXBY.gif')
 						.attr('src', 'http://i.imgur.com/1uXBY.gif')
 						;
